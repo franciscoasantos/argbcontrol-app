@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.appflutter">
+    package="net.franciscosantos.ledcontroller">
    <application
-        android:label="appflutter"
+        android:label="LedController"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
