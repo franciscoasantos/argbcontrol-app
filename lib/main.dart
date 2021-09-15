@@ -42,31 +42,36 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData.light(),
       home: Scaffold(
         appBar: AppBar(
           backgroundColor: _currentColor,
           title: Text(widget.title),
         ),
-        body: Container(
-          decoration: const BoxDecoration(color: Colors.black12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              const SizedBox(height: 48),
-              Center(
-                child: CircleColorPicker(
-                  controller: _controller,
-                  size: const Size(300, 300),
-                  strokeWidth: 8,
-                  thumbSize: 40,
-                  onChanged: (color) {
-                    setState(() => _currentColor = color);
-                    _sendMessage(color);
-                  },
-                ),
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            const SizedBox(height: 48),
+            Center(
+              child: CircleColorPicker(
+                controller: _controller,
+                size: const Size(300, 300),
+                strokeWidth: 5,
+                thumbSize: 40,
+                onChanged: (color) {
+                  setState(() => _currentColor = color);
+                  _sendMessage(color);
+                },
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 48),
+            StreamBuilder(
+              stream: _channel.stream,
+              builder: (context, snapshot) {
+                return Text(snapshot.hasData ? '${snapshot.data}' : '');
+              },
+            ),
+          ],
         ),
       ),
     );
