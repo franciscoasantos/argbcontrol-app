@@ -1,9 +1,5 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_circle_color_picker/flutter_circle_color_picker.dart';
-import 'package:web_socket_channel/io.dart';
-import 'package:web_socket_channel/status.dart' as status;
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 void main() {
@@ -20,7 +16,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const Home(title: 'Escolha a cor'),
+      home: const Home(title: 'Escolha uma cor'),
     );
   }
 }
@@ -35,7 +31,8 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final _channel = WebSocketChannel.connect(Uri.parse('ws://localhost:3000'));
+  final _channel = WebSocketChannel.connect(
+      Uri.parse('ws://services.franciscosantos.net:3000/?clientId=1'));
   Color _currentColor = Colors.blue;
   Color _oldColor = Colors.black;
   final _controller = CircleColorPickerController(
@@ -60,20 +57,13 @@ class _HomeState extends State<Home> {
                 child: CircleColorPicker(
                   controller: _controller,
                   size: const Size(300, 300),
-                  strokeWidth: 10,
-                  thumbSize: 50,
+                  strokeWidth: 8,
+                  thumbSize: 40,
                   onChanged: (color) {
                     setState(() => _currentColor = color);
                     _sendMessage(color);
                   },
                 ),
-              ),
-              const SizedBox(height: 48),
-              StreamBuilder(
-                stream: _channel.stream,
-                builder: (context, snapshot) {
-                  return Text(snapshot.hasData ? '${snapshot.data}' : '');
-                },
               ),
             ],
           ),
@@ -87,8 +77,6 @@ class _HomeState extends State<Home> {
       int R = color.red;
       int G = color.green;
       int B = color.blue;
-
-      log('{"R": "${R}", "G": "${G}", "B": "${B}"}');
       _channel.sink.add('{"R": "${R}", "G": "${G}", "B": "${B}"}');
     }
     _oldColor = color;
