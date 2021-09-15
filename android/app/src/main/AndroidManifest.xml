@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="net.franciscosantos.ledcontroller">
+    package="com.example.appflutter">
    <application
         android:label="LedController"
         android:icon="@mipmap/ic_launcher">
