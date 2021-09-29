@@ -36,7 +36,7 @@ class _HomeState extends State<Home> {
   Color _currentColor = Colors.blue;
   Color _oldColor = Colors.black;
   final _controller = CircleColorPickerController(
-    initialColor: Colors.blue,
+    initialColor: const Color.fromARGB(255, 0, 0, 255),
   );
 
   @override
@@ -82,7 +82,7 @@ class _HomeState extends State<Home> {
       int R = color.red;
       int G = color.green;
       int B = color.blue;
-      _channel.sink.add('{"R": "${R}", "G": "${G}", "B": "${B}"}');
+      _channel.sink.add('{"M": "0", "R": "$R", "G": "$G", "B": "$B"}');
     }
     _oldColor = color;
   }
