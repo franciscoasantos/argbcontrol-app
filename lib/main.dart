@@ -68,7 +68,9 @@ class _HomeState extends State<Home> {
             StreamBuilder(
               stream: _channel.stream,
               builder: (context, snapshot) {
-                return Text(snapshot.hasData ? '${snapshot.data}' : '');
+                return Text(snapshot.hasData
+                    ? _messageToJSON(snapshot.data.toString())
+                    : '');
               },
             ),
           ],
@@ -85,6 +87,15 @@ class _HomeState extends State<Home> {
       _channel.sink.add('{"M": "0", "R": "$R", "G": "$G", "B": "$B"}');
     }
     _oldColor = color;
+  }
+
+  String _messageToJSON(String message) {
+    String M = message.substring(0, 1);
+    String R = message.substring(1, 4);
+    String G = message.substring(4, 7);
+    String B = message.substring(7, 10);
+
+    return '{"M": "$M", "R": "$R", "G": "$G", "B": "$B"}';
   }
 
   @override
