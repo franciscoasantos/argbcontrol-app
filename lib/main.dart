@@ -35,6 +35,8 @@ class _HomeState extends State<Home> {
       Uri.parse('ws://services.franciscosantos.net:3000/?clientId=1'));
   Color _currentColor = Colors.blue;
   Color _oldColor = Colors.black;
+  String _modo = "0";
+  String _oldModo = "1";
   final _controller = CircleColorPickerController(
     initialColor: const Color.fromARGB(255, 0, 0, 255),
   );
@@ -60,7 +62,7 @@ class _HomeState extends State<Home> {
                 thumbSize: 40,
                 onChanged: (color) {
                   setState(() => _currentColor = color);
-                  _sendMessage(color);
+                  _sendMessage(_modo, color);
                 },
               ),
             ),
@@ -73,20 +75,34 @@ class _HomeState extends State<Home> {
                     : '');
               },
             ),
+            const SizedBox(height: 48),
+            ElevatedButton(
+              onPressed: () {
+                if (_modo == "0") {
+                  _modo = "1";
+                  _sendMessage(_modo, const Color.fromARGB(255, 255, 0, 0));
+                } else {
+                  _modo = "0";
+                  _sendMessage(_modo, _oldColor);
+                }
+              },
+              child: const Text('Alterar Modo'),
+            ),
           ],
         ),
       ),
     );
   }
 
-  void _sendMessage(Color color) {
-    if (color != _oldColor) {
+  void _sendMessage(String M, Color color) {
+    if (color != _oldColor || _modo != _oldModo) {
       int R = color.red;
       int G = color.green;
       int B = color.blue;
-      _channel.sink.add('{"M": "0", "R": "$R", "G": "$G", "B": "$B"}');
+      _channel.sink.add('{"M": "$M", "R": "$R", "G": "$G", "B": "$B"}');
     }
     _oldColor = color;
+    _oldModo = M;
   }
 
   String _messageToJSON(String message) {
