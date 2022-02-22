@@ -1,6 +1,6 @@
 import 'dart:developer';
 
-import 'package:appflutter/utils/websocket.dart';
+import 'package:ledcontroller/utils/websocket.dart';
 import 'package:flutter/material.dart';
 
 class LoadingPage extends StatefulWidget {

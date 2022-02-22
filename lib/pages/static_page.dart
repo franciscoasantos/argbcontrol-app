@@ -1,4 +1,4 @@
-import 'package:appflutter/utils/websocket.dart';
+import 'package:ledcontroller/utils/websocket.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_circle_color_picker/flutter_circle_color_picker.dart';
 

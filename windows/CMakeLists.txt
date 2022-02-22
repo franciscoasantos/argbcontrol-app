@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
-project(appflutter LANGUAGES CXX)
+project(ledcontroller LANGUAGES CXX)
 
-set(BINARY_NAME "appflutter")
+set(BINARY_NAME "ledcontroller")
 
 cmake_policy(SET CMP0063 NEW)
 

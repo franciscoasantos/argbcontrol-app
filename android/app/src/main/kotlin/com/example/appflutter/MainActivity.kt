@@ -1,4 +1,4 @@
-package com.example.appflutter
+package com.example.ledcontroller
 
 import io.flutter.embedding.android.FlutterActivity
 

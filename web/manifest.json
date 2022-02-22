@@ -1,6 +1,6 @@
 {
-    "name": "appflutter",
-    "short_name": "appflutter",
+    "name": "ledcontroller",
+    "short_name": "ledcontroller",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

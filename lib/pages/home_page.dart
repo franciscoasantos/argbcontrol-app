@@ -1,5 +1,5 @@
-import 'package:appflutter/pages/static_page.dart';
-import 'package:appflutter/utils/websocket.dart';
+import 'package:ledcontroller/pages/static_page.dart';
+import 'package:ledcontroller/utils/websocket.dart';
 import 'package:flutter/material.dart';
 
 import 'fade_page.dart';
