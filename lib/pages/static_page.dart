@@ -1,4 +1,4 @@
-import 'package:appflutter/websocket.dart';
+import 'package:appflutter/utils/websocket.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_circle_color_picker/flutter_circle_color_picker.dart';
 
@@ -11,12 +11,16 @@ class StaticPage extends StatefulWidget {
   _StaticPageState createState() => _StaticPageState();
 }
 
-class _StaticPageState extends State<StaticPage> {
+class _StaticPageState extends State<StaticPage>
+    with AutomaticKeepAliveClientMixin<StaticPage> {
   Color _previousColor = Colors.black;
 
   final _controller = CircleColorPickerController(
     initialColor: const Color.fromARGB(255, 0, 0, 255),
   );
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
@@ -28,9 +32,10 @@ class _StaticPageState extends State<StaticPage> {
         Center(
           child: CircleColorPicker(
             controller: _controller,
+            textStyle: const TextStyle(color: Colors.white),
             size: const Size(300, 300),
-            strokeWidth: 5,
-            thumbSize: 40,
+            strokeWidth: 4,
+            thumbSize: 36,
             onChanged: (color) {
               setState(() => color);
               _sendMessage(color);

@@ -1,4 +1,4 @@
-import 'package:appflutter/websocket.dart';
+import 'package:appflutter/utils/websocket.dart';
 import 'package:flutter/material.dart';
 
 class FadePage extends StatefulWidget {
@@ -14,7 +14,13 @@ class _FadePageState extends State<FadePage> {
   @override
   Widget build(BuildContext context) {
     _sendMessage(const Color.fromARGB(255, 0, 0, 0));
-    return Center();
+    return Center(
+      child: Column(
+        children: const [
+          Text("TODO"),
+        ],
+      ),
+    );
   }
 
   void _sendMessage(Color color) {

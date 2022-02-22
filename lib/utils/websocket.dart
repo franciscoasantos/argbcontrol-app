@@ -5,12 +5,13 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 class WebSocket {
   late WebSocketChannel _channel;
   String _lastMessage = "";
-  
-  WebSocket() {
-    _channel = WebSocketChannel.connect(Uri.parse('ws://services.franciscosantos.net:3000/?clientId=1'));
+
+  WebSocket(String uri) {
+    _channel = WebSocketChannel.connect(Uri.parse(uri));
 
     _channel.stream.listen((message) {
       _lastMessage = message;
+      log(_lastMessage);
     });
   }
 
@@ -18,7 +19,15 @@ class WebSocket {
     _channel.sink.add(message);
   }
 
-  String getLastMessage(){
+  String getLastMessage() {
     return _lastMessage;
+  }
+
+  String getCurrentFunction() {
+    return _lastMessage.substring(0, 1);
+  }
+
+  bool isConnected() {
+    return _lastMessage != "";
   }
 }
