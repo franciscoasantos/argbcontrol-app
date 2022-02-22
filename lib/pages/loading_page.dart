@@ -36,14 +36,17 @@ class _LoadingPage extends State<LoadingPage> {
   }
 
   void verifyConnection() async {
-    Future.delayed(const Duration(seconds: 1), (() {
-      if (widget.client.isConnected()) {
-        Navigator.pushNamed(context, HomePage.routeName,
-            arguments:
-                ScreenArguments(widget.client, widget.client.getLastMessage()));
-      } else {
-        verifyConnection();
-      }
-    }));
+    Future.delayed(
+      const Duration(seconds: 1),
+      (() {
+        if (widget.client.isConnected()) {
+          Navigator.pushNamed(context, HomePage.routeName,
+              arguments: ScreenArguments(
+                  widget.client, widget.client.getLastMessage()));
+        } else {
+          verifyConnection();
+        }
+      }),
+    );
   }
 }

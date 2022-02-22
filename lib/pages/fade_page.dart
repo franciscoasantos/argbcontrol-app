@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:ledcontroller/utils/websocket.dart';
 import 'package:flutter/material.dart';
 
@@ -11,22 +13,90 @@ class FadePage extends StatefulWidget {
 }
 
 class _FadePageState extends State<FadePage> {
+  double _currentSliderValue = 3;
+
   @override
   Widget build(BuildContext context) {
-    _sendMessage(const Color.fromARGB(255, 0, 0, 0));
     return Center(
       child: Column(
-        children: const [
-          Text("TODO"),
+        children: [
+          const Text("Speed"),
+          Slider(
+            value: _currentSliderValue,
+            max: 10,
+            min: 1,
+            divisions: 9,
+            label: _currentSliderValue.floor().toString(),
+            onChanged: (double value) {
+              setState(() {
+                _currentSliderValue = value;
+                _calculateSpeed(value.floor());
+              });
+            },
+          ),
         ],
       ),
     );
   }
 
-  void _sendMessage(Color color) {
-    int R = color.red;
-    int G = color.green;
-    int B = color.blue;
-    widget.wsClient.sendMessage('{"M": "1", "R": "$R", "G": "$G", "B": "$B"}');
+  void _calculateSpeed(int speed) {
+    int increase = 0, delay = 0;
+
+    switch (speed) {
+      case 1:
+        increase = 1;
+        delay = 140;
+        break;
+
+      case 2:
+        increase = 1;
+        delay = 100;
+        break;
+
+      case 3:
+        increase = 1;
+        delay = 60;
+        break;
+
+      case 4:
+        increase = 1;
+        delay = 20;
+        break;
+
+      case 5:
+        increase = 3;
+        delay = 20;
+        break;
+
+      case 6:
+        increase = 5;
+        delay = 20;
+        break;
+
+      case 7:
+        increase = 5;
+        delay = 10;
+        break;
+
+      case 8:
+        increase = 17;
+        delay = 60;
+        break;
+
+      case 9:
+        increase = 17;
+        delay = 20;
+        break;
+
+      case 10:
+        increase = 17;
+        delay = 0;
+        break;
+    }
+    _sendMessage(increase, delay);
+  }
+
+  void _sendMessage(int increase, int delay) {
+    widget.wsClient.sendMessage('{"M": "1", "A": "$increase$delay"}');
   }
 }
