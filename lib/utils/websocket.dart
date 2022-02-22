@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class WebSocket {
@@ -11,7 +9,6 @@ class WebSocket {
 
     _channel.stream.listen((message) {
       _lastMessage = message;
-      log(_lastMessage);
     });
   }
 

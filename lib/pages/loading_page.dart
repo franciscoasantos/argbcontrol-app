@@ -1,11 +1,12 @@
-import 'dart:developer';
-
+import 'package:ledcontroller/pages/home_page.dart';
+import 'package:ledcontroller/utils/screen_arguments.dart';
 import 'package:ledcontroller/utils/websocket.dart';
 import 'package:flutter/material.dart';
 
 class LoadingPage extends StatefulWidget {
   const LoadingPage({Key? key, required this.client}) : super(key: key);
 
+  static const routeName = '/LoadingPage';
   final WebSocket client;
 
   @override
@@ -36,9 +37,10 @@ class _LoadingPage extends State<LoadingPage> {
 
   void verifyConnection() async {
     Future.delayed(const Duration(seconds: 1), (() {
-      log("verificando...");
       if (widget.client.isConnected()) {
-        Navigator.pushNamed(context, '/home');
+        Navigator.pushNamed(context, HomePage.routeName,
+            arguments:
+                ScreenArguments(widget.client, widget.client.getLastMessage()));
       } else {
         verifyConnection();
       }

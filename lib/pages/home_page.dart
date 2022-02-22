@@ -2,11 +2,13 @@ import 'package:ledcontroller/pages/static_page.dart';
 import 'package:ledcontroller/utils/websocket.dart';
 import 'package:flutter/material.dart';
 
+import '../utils/screen_arguments.dart';
 import 'fade_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key, required this.client}) : super(key: key);
 
+  static const routeName = '/home';
   final WebSocket client;
 
   @override
@@ -30,6 +32,9 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)!.settings.arguments as ScreenArguments;
+    _controller.animateTo(int.parse(args.lastMessage.substring(0,1)));
+
     return MaterialApp(
       theme: ThemeData.dark(),
       home: DefaultTabController(
