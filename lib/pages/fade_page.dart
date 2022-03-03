@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:ledcontroller/utils/websocket.dart';
 import 'package:flutter/material.dart';
 
@@ -97,6 +95,6 @@ class _FadePageState extends State<FadePage> {
   }
 
   void _sendMessage(int increase, int delay) {
-    widget.wsClient.sendMessage('{"M": "1", "A": "$increase$delay"}');
+    widget.wsClient.sendMessage('{"M": "1", "A": "${increase.toString().padLeft(2,'0')}${delay.toString().padLeft(3,'0')}"}');
   }
 }
