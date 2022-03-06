@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:ledcontroller/utils/fade_arguments.dart';
 import 'package:ledcontroller/utils/websocket.dart';
 import 'package:flutter/material.dart';
 
@@ -12,6 +15,7 @@ class FadePage extends StatefulWidget {
 
 class _FadePageState extends State<FadePage> {
   double _currentSliderValue = 3;
+  FadeArguments _previousArguments = FadeArguments(0, 0);
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +32,7 @@ class _FadePageState extends State<FadePage> {
             onChanged: (double value) {
               setState(() {
                 _currentSliderValue = value;
-                _calculateSpeed(value.floor());
+                _sendMessage(_calculateSpeed(value.floor()));
               });
             },
           ),
@@ -37,18 +41,18 @@ class _FadePageState extends State<FadePage> {
     );
   }
 
-  void _calculateSpeed(int speed) {
+  FadeArguments _calculateSpeed(int speed) {
     int increase = 0, delay = 0;
 
     switch (speed) {
       case 1:
         increase = 1;
-        delay = 140;
+        delay = 200;
         break;
 
       case 2:
         increase = 1;
-        delay = 100;
+        delay = 120;
         break;
 
       case 3:
@@ -63,7 +67,7 @@ class _FadePageState extends State<FadePage> {
 
       case 5:
         increase = 3;
-        delay = 20;
+        delay = 40;
         break;
 
       case 6:
@@ -73,7 +77,7 @@ class _FadePageState extends State<FadePage> {
 
       case 7:
         increase = 5;
-        delay = 10;
+        delay = 0;
         break;
 
       case 8:
@@ -91,10 +95,15 @@ class _FadePageState extends State<FadePage> {
         delay = 0;
         break;
     }
-    _sendMessage(increase, delay);
+    return FadeArguments(increase, delay);
   }
 
-  void _sendMessage(int increase, int delay) {
-    widget.wsClient.sendMessage('{"M": "1", "A": "${increase.toString().padLeft(2,'0')}${delay.toString().padLeft(3,'0')}"}');
+  void _sendMessage(FadeArguments arguments) {
+    if (_previousArguments.toString() != arguments.toString()) {
+      log(arguments.increase.toString() + arguments.delay.toString());
+      widget.wsClient.sendMessage(
+          '{"M": "1", "A": "${arguments.increase.toString().padLeft(2, '0')}${arguments.delay.toString().padLeft(3, '0')}"}');
+      _previousArguments = arguments;
+    }
   }
 }
