@@ -72,22 +72,22 @@ class _FadePageState extends State<FadePage> {
 
       case 6:
         increase = 5;
-        delay = 20;
+        delay = 25;
         break;
 
       case 7:
         increase = 5;
-        delay = 0;
+        delay = 10;
         break;
 
       case 8:
         increase = 17;
-        delay = 60;
+        delay = 20;
         break;
 
       case 9:
         increase = 17;
-        delay = 20;
+        delay = 10;
         break;
 
       case 10:
@@ -100,7 +100,6 @@ class _FadePageState extends State<FadePage> {
 
   void _sendMessage(FadeArguments arguments) {
     if (_previousArguments.toString() != arguments.toString()) {
-      log(arguments.increase.toString() + arguments.delay.toString());
       widget.wsClient.sendMessage(
           '{"M": "1", "A": "${arguments.increase.toString().padLeft(2, '0')}${arguments.delay.toString().padLeft(3, '0')}"}');
       _previousArguments = arguments;
