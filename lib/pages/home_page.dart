@@ -1,3 +1,4 @@
+import 'package:ledcontroller/pages/rainbow_page.dart';
 import 'package:ledcontroller/pages/static_page.dart';
 import 'package:ledcontroller/utils/websocket.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,7 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _controller = TabController(length: 2, vsync: this);
+    _controller = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -38,7 +39,7 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin {
     return MaterialApp(
       theme: ThemeData.dark(),
       home: DefaultTabController(
-        length: 2,
+        length: _controller.length,
         child: Scaffold(
           appBar: AppBar(
             bottom: TabBar(
@@ -46,12 +47,16 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin {
               indicatorColor: Colors.amberAccent,
               tabs: const [
                 Tab(
-                  icon: Icon(Icons.flash_on),
+                  icon: Icon(Icons.palette_outlined),
                   text: 'Static',
                 ),
                 Tab(
                   icon: Icon(Icons.sync),
                   text: 'Fade',
+                ),
+                Tab(
+                  icon: Icon(Icons.flash_on),
+                  text: 'Rainbow',
                 )
               ],
             ),
@@ -61,7 +66,8 @@ class _HomePage extends State<HomePage> with SingleTickerProviderStateMixin {
             controller: _controller,
             children: [
               StaticPage(wsClient: widget.client),
-              FadePage(wsClient: widget.client)
+              FadePage(wsClient: widget.client),
+              RainbowPage(wsClient: widget.client)
             ],
           ),
         ),

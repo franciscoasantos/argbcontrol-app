@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:ledcontroller/utils/fade_arguments.dart';
 import 'package:ledcontroller/utils/websocket.dart';
 import 'package:flutter/material.dart';
