@@ -1,30 +1,60 @@
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class WebSocket {
-  late WebSocketChannel _channel;
+  WebSocketChannel? _channel;
+  bool _isWebsocketRunning = false;
+
   String _lastMessage = "";
+  late Uri _uri;
 
   WebSocket(String uri) {
-    _channel = WebSocketChannel.connect(Uri.parse(uri));
-
-    _channel.stream.listen((message) {
-      _lastMessage = message;
-    });
+    _uri = Uri.parse(uri);
   }
 
   void sendMessage(String message) {
-    _channel.sink.add(message);
+    _channel!.sink.add(message);
   }
 
   String getLastMessage() {
     return _lastMessage;
   }
 
-  String getCurrentFunction() {
+  String getCurrentMode() {
     return _lastMessage.substring(0, 1);
   }
 
-  bool isConnected() {
-    return _lastMessage != "";
+  bool isWebsocketRunning() {
+    return _isWebsocketRunning;
+  }
+
+  void startStream() async {
+    if (_isWebsocketRunning) return;
+    
+    _channel = WebSocketChannel.connect(_uri);
+
+    _channel!.stream.listen(
+      (event) {
+        if (!_isWebsocketRunning) _isWebsocketRunning = true;
+        _lastMessage = event;
+      },
+      onDone: () {
+        restartStream();
+      },
+      onError: (err) {
+        restartStream();
+      },
+    );
+  }
+
+  void restartStream() async {
+    await Future.delayed(const Duration(milliseconds: 500), () {
+      closeStream();
+      startStream();
+    });
+  }
+
+  void closeStream() {
+    _channel!.sink.close();
+    _isWebsocketRunning = false;
   }
 }

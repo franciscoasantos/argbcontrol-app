@@ -119,3 +119,5 @@ lib/generated_plugin_registrant.dart
 *.code-workspace
 
 # End of https://www.toptal.com/developers/gitignore/api/flutter,dart,visualstudiocode
+.vscode/launch.json
+windows/*

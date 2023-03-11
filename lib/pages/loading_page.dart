@@ -17,7 +17,7 @@ class _LoadingPage extends State<LoadingPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) => verifyConnection());
+    WidgetsBinding.instance?.addPostFrameCallback((_) => waitConnection());
   }
 
   @override
@@ -35,16 +35,16 @@ class _LoadingPage extends State<LoadingPage> {
     ));
   }
 
-  void verifyConnection() async {
+  void waitConnection() async {
     Future.delayed(
       const Duration(seconds: 1),
       (() {
-        if (widget.client.isConnected()) {
+        if (widget.client.isWebsocketRunning()) {
           Navigator.pushNamed(context, HomePage.routeName,
               arguments: ScreenArguments(
                   widget.client, widget.client.getLastMessage()));
         } else {
-          verifyConnection();
+          waitConnection();
         }
       }),
     );
