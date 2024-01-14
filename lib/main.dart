@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
- 
+import 'package:http/http.dart' as http;
+
 import 'pages/home_page.dart';
 import 'pages/loading_page.dart';
 import 'utils/websocket.dart';
 
-void main() {
+const serverHost = "144.217.94.131:5000";
+const clientId = "6GE7BnevZEqDnnc7hcz2bA";
+const clientSecret = "9a02d1e835264f6fa7f3d0ede49cea5a";
+
+Future<void> main() async {
+  var token = await http.read(Uri.http(serverHost, '/api/token'),
+      headers: {"X-Client-Id": clientId, "X-Client-Secret": clientSecret});
+
   final wsClient =
-      WebSocket('ws://services.franciscosantos.net:5000/?socketId=d8455cdd6f2a4d9bb49c41b3909f1fe3&clientId=8b0e0a0117ee4a7a999958fa1a592ead');
-      wsClient.startStream();
+      WebSocket('ws://$serverHost/?client_id=$clientId&access_token=$token');
+
+  wsClient.startStream();
+
   runApp(
     MaterialApp(initialRoute: LoadingPage.routeName, routes: {
       LoadingPage.routeName: (context) => LoadingPage(client: wsClient),

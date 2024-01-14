@@ -17,16 +17,16 @@ class _LoadingPage extends State<LoadingPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) => waitConnection());
+    WidgetsBinding.instance.addPostFrameCallback((_) => waitConnection());
   }
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return const Center(
         child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: const [
-        SizedBox(child: CircularProgressIndicator(), width: 32, height: 32),
+      children: [
+        SizedBox(width: 32, height: 32, child: CircularProgressIndicator()),
         Text(
           "Tentando conectar ao servidor...",
           style: TextStyle(color: Colors.white, fontSize: 10),
