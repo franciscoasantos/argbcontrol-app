@@ -13,10 +13,11 @@ class StaticPage extends StatefulWidget {
 
 class _StaticPageState extends State<StaticPage>
     with AutomaticKeepAliveClientMixin<StaticPage> {
-  Color _previousColor = Colors.black;
+  Color _currentColor = const Color.fromARGB(0, 0, 0, 0);
+  double _currentSliderValue = 0;
 
   final _controller = CircleColorPickerController(
-    initialColor: const Color.fromARGB(255, 0, 0, 255),
+    initialColor: const Color.fromARGB(0, 0, 0, 255),
   );
 
   @override
@@ -24,7 +25,7 @@ class _StaticPageState extends State<StaticPage>
 
   @override
   Widget build(BuildContext context) {
-    _sendMessage(_previousColor);
+    _sendMessage(_currentColor);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
@@ -38,8 +39,31 @@ class _StaticPageState extends State<StaticPage>
             thumbSize: 36,
             onChanged: (color) {
               setState(() => color);
-              _sendMessage(color);
+              var newColor = Color.fromARGB(_currentColor.alpha, color.red, color.green, color.blue);
+              _sendMessage(newColor);
             },
+          ),
+        ),
+        const SizedBox(height: 48),
+        Center(
+          child: Column(
+            children: [
+              const Text("White Intensity"),
+              Slider(
+                value: _currentSliderValue,
+                max: 255,
+                min: 0,
+                divisions: 50,
+                label: "${(_currentSliderValue / 255 * 100).floor()}%",
+                onChanged: (double value) {
+                  setState(() {
+                    _currentSliderValue = value;
+                    var color = Color.fromARGB(value.round(), _currentColor.red, _currentColor.green, _currentColor.blue);
+                    _sendMessage(color);
+                  });
+                },
+              ),
+            ],
           ),
         ),
       ],
@@ -47,13 +71,14 @@ class _StaticPageState extends State<StaticPage>
   }
 
   void _sendMessage(Color color) {
-    if (color != _previousColor) {
+    if (color != _currentColor) {
       int R = color.red;
       int G = color.green;
       int B = color.blue;
-      widget.wsClient
-          .sendMessage('{"M": "0", "R": "$R", "G": "$G", "B": "$B"}');
+      int W = color.alpha;
+      widget.wsClient.sendMessage(
+          '{"M": "0", "R": "$R", "G": "$G", "B": "$B", "W": "$W"}');
     }
-    _previousColor = color;
+    _currentColor = color;
   }
 }

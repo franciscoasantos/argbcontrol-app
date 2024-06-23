@@ -5,7 +5,7 @@ import 'pages/home_page.dart';
 import 'pages/loading_page.dart';
 import 'utils/websocket.dart';
 
-const serverHost = "144.217.94.131:5000";
+const serverHost = "51.222.139.201:5000";
 const clientId = "6GE7BnevZEqDnnc7hcz2bA";
 const clientSecret = "9a02d1e835264f6fa7f3d0ede49cea5a";
 
