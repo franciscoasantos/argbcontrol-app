@@ -1,9 +1,10 @@
-import 'package:ledcontroller/utils/fade_arguments.dart';
-import 'package:ledcontroller/utils/websocket.dart';
+import 'package:argbcontrol_app/utils/fade_arguments.dart';
+import 'package:argbcontrol_app/utils/websocket.dart';
 import 'package:flutter/material.dart';
+import 'dart:convert';
 
 class FadePage extends StatefulWidget {
-  const FadePage({Key? key, required this.wsClient}) : super(key: key);
+  const FadePage({super.key, required this.wsClient});
 
   final WebSocket wsClient;
 
@@ -97,9 +98,12 @@ class _FadePageState extends State<FadePage> {
   }
 
   void _sendMessage(FadeArguments arguments) {
-    if (_previousArguments.toString() != arguments.toString()) {
-      widget.wsClient.sendMessage(
-          '{"M": "1", "A": "${arguments.increase.toString().padLeft(2, '0')}${arguments.delay.toString().padLeft(3, '0')}"}');
+    if (_previousArguments != arguments) {
+      final payload = jsonEncode({
+        "M": "1",
+        "A": "${arguments.increase.toString().padLeft(2, '0')}${arguments.delay.toString().padLeft(3, '0')}"
+      });
+      widget.wsClient.sendMessage(payload);
       _previousArguments = arguments;
     }
   }

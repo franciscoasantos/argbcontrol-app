@@ -1,6 +1,6 @@
 {
-    "name": "ledcontroller",
-    "short_name": "ledcontroller",
+    "name": "LedController",
+    "short_name": "LedController",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

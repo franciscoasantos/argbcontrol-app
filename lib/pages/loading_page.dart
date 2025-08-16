@@ -1,10 +1,10 @@
-import 'package:ledcontroller/pages/home_page.dart';
-import 'package:ledcontroller/utils/screen_arguments.dart';
-import 'package:ledcontroller/utils/websocket.dart';
+import 'package:argbcontrol_app/pages/home_page.dart';
+import 'package:argbcontrol_app/utils/screen_arguments.dart';
+import 'package:argbcontrol_app/utils/websocket.dart';
 import 'package:flutter/material.dart';
 
 class LoadingPage extends StatefulWidget {
-  const LoadingPage({Key? key, required this.client}) : super(key: key);
+  const LoadingPage({super.key, required this.client});
 
   static const routeName = '/LoadingPage';
   final WebSocket client;
@@ -36,11 +36,13 @@ class _LoadingPage extends State<LoadingPage> {
   }
 
   void waitConnection() async {
+    if (!mounted) return;
     Future.delayed(
       const Duration(seconds: 1),
       (() {
+        if (!mounted) return;
         if (widget.client.isWebsocketRunning()) {
-          Navigator.pushNamed(context, HomePage.routeName,
+          Navigator.pushReplacementNamed(context, HomePage.routeName,
               arguments: ScreenArguments(
                   widget.client, widget.client.getLastMessage()));
         } else {

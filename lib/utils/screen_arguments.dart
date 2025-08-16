@@ -1,4 +1,4 @@
-import 'package:ledcontroller/utils/websocket.dart';
+import 'package:argbcontrol_app/utils/websocket.dart';
 
 class ScreenArguments {
   final WebSocket client;

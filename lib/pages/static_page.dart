@@ -1,9 +1,10 @@
-import 'package:ledcontroller/utils/websocket.dart';
+import 'package:argbcontrol_app/utils/websocket.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_circle_color_picker/flutter_circle_color_picker.dart';
+import 'dart:convert';
 
 class StaticPage extends StatefulWidget {
-  const StaticPage({Key? key, required this.wsClient}) : super(key: key);
+  const StaticPage({super.key, required this.wsClient});
 
   final WebSocket wsClient;
 
@@ -25,7 +26,7 @@ class _StaticPageState extends State<StaticPage>
 
   @override
   Widget build(BuildContext context) {
-    _sendMessage(_currentColor);
+    super.build(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
@@ -38,9 +39,10 @@ class _StaticPageState extends State<StaticPage>
             strokeWidth: 4,
             thumbSize: 36,
             onChanged: (color) {
-              setState(() => color);
-              var newColor = Color.fromARGB(_currentColor.alpha, color.red, color.green, color.blue);
+              final newColor = Color.fromARGB(
+                  _currentColor.alpha, color.red, color.green, color.blue);
               _sendMessage(newColor);
+              setState(() {});
             },
           ),
         ),
@@ -56,10 +58,14 @@ class _StaticPageState extends State<StaticPage>
                 divisions: 50,
                 label: "${(_currentSliderValue / 255 * 100).floor()}%",
                 onChanged: (double value) {
+                  final color = Color.fromARGB(
+                      value.round(),
+                      _currentColor.red,
+                      _currentColor.green,
+                      _currentColor.blue);
+                  _sendMessage(color);
                   setState(() {
                     _currentSliderValue = value;
-                    var color = Color.fromARGB(value.round(), _currentColor.red, _currentColor.green, _currentColor.blue);
-                    _sendMessage(color);
                   });
                 },
               ),
@@ -76,8 +82,13 @@ class _StaticPageState extends State<StaticPage>
       int G = color.green;
       int B = color.blue;
       int W = color.alpha;
-      widget.wsClient.sendMessage(
-          '{"M": "0", "R": "$R", "G": "$G", "B": "$B", "W": "$W"}');
+      widget.wsClient.sendMessage(jsonEncode({
+        "M": "0",
+        "R": "$R",
+        "G": "$G",
+        "B": "$B",
+        "W": "$W"
+      }));
     }
     _currentColor = color;
   }

@@ -1,8 +1,10 @@
+import 'dart:math' as math;
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class WebSocket {
   WebSocketChannel? _channel;
   bool _isWebsocketRunning = false;
+  bool _isDisposed = false;
 
   String _lastMessage = "";
   late Uri _uri;
@@ -12,7 +14,9 @@ class WebSocket {
   }
 
   void sendMessage(String message) {
-    _channel!.sink.add(message);
+    final channel = _channel;
+    if (channel == null) return;
+    channel.sink.add(message);
   }
 
   String getLastMessage() {
@@ -28,7 +32,7 @@ class WebSocket {
   }
 
   void startStream() async {
-    if (_isWebsocketRunning) return;
+    if (_isWebsocketRunning || _isDisposed) return;
     
     _channel = WebSocketChannel.connect(_uri);
 
@@ -36,6 +40,7 @@ class WebSocket {
       (event) {
         if (!_isWebsocketRunning) _isWebsocketRunning = true;
         _lastMessage = event;
+        _currentReconnectDelayMs = _initialReconnectDelayMs;
       },
       onDone: () {
         restartStream();
@@ -47,14 +52,29 @@ class WebSocket {
   }
 
   void restartStream() async {
-    await Future.delayed(const Duration(milliseconds: 500), () {
+    if (_isDisposed) return;
+    await Future.delayed(Duration(milliseconds: _currentReconnectDelayMs), () {
+      if (_isDisposed) return;
       closeStream();
       startStream();
     });
+    _currentReconnectDelayMs = math.min(_currentReconnectDelayMs * 2, _maxReconnectDelayMs);
   }
 
   void closeStream() {
-    _channel!.sink.close();
+    final channel = _channel;
+    if (channel == null) return;
+    channel.sink.close();
     _isWebsocketRunning = false;
+  }
+
+  // Backoff settings
+  static const int _initialReconnectDelayMs = 800;
+  static const int _maxReconnectDelayMs = 10000;
+  int _currentReconnectDelayMs = _initialReconnectDelayMs;
+
+  void dispose() {
+    _isDisposed = true;
+    closeStream();
   }
 }

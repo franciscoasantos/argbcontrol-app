@@ -1,8 +1,9 @@
-import 'package:ledcontroller/utils/websocket.dart';
+import 'package:argbcontrol_app/utils/websocket.dart';
 import 'package:flutter/material.dart';
+import 'dart:convert';
 
 class RainbowPage extends StatefulWidget {
-  const RainbowPage({Key? key, required this.wsClient}) : super(key: key);
+  const RainbowPage({super.key, required this.wsClient});
 
   final WebSocket wsClient;
 
@@ -79,8 +80,11 @@ class _RainbowPageState extends State<RainbowPage> {
 
   void _sendMessage(int delay) {
     if (_previousDelay != delay) {
-      widget.wsClient.sendMessage(
-          '{"M": "2", "A": "${delay.toString().padLeft(4, '0')}"}');
+      final payload = jsonEncode({
+        "M": "2",
+        "A": delay.toString().padLeft(4, '0')
+      });
+      widget.wsClient.sendMessage(payload);
       _previousDelay = delay;
     }
   }
