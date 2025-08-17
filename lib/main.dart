@@ -11,15 +11,17 @@ const clientSecret = "9a02d1e835264f6fa7f3d0ede49cea5a";
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final tokenInfo = await TokenManager(
+  final wsScheme = 'ws://';
+  final tokenManager = TokenManager(
     serverHost: serverHost,
     clientId: clientId,
     clientSecret: clientSecret,
-  ).getValidToken();
+  );
 
-  final wsScheme = 'ws://';
-  final wsClient = LedWebSocketClient(
-      '$wsScheme$serverHost/?client_id=$clientId&access_token=${tokenInfo.token}');
+  final wsClient = LedWebSocketClient.withUriProvider(() async {
+    final tokenInfo = await tokenManager.getValidToken();
+    return Uri.parse('$wsScheme$serverHost/?client_id=$clientId&access_token=${tokenInfo.token}');
+  });
 
   wsClient.startStream();
 

@@ -1,7 +1,6 @@
 import 'package:argbcontrol_app/services/ws_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
-import 'package:argbcontrol_app/utils/debouncer.dart';
 import 'package:argbcontrol_app/models/message_builder.dart';
 import 'package:argbcontrol_app/utils/favorites_manager.dart';
 import 'dart:math' as math;
@@ -19,7 +18,7 @@ class _StaticPageState extends State<StaticPage>
     with AutomaticKeepAliveClientMixin<StaticPage> {
   Color _currentColor = const Color.fromARGB(0, 0, 0, 0);
   double _whiteIntensity = 0;
-  final Debouncer _debouncer = Debouncer(duration: const Duration(milliseconds: 120));
+  
   Color? _lastSentColor;
   bool _appliedInitial = false;
   
@@ -71,7 +70,7 @@ class _StaticPageState extends State<StaticPage>
                     color.green,
                     color.blue,
                   );
-                  _debouncer.run(() => _sendMessage(newColor));
+                  _sendMessage(newColor);
                   setState(() => _currentColor = newColor);
                 },
                 enableOpacity: false,
@@ -81,12 +80,12 @@ class _StaticPageState extends State<StaticPage>
                   ColorPickerType.accent: false,
                   ColorPickerType.custom: false,
                 },
-                width: 36,
-                height: 36,
+                width: 28,
+                height: 28,
                 borderRadius: 8,
                 wheelDiameter: wheelDiameter,
                 colorCodeHasColor: true,
-
+                showColorName: true
               ),
             ),
                         const SizedBox(height: 16),
@@ -99,7 +98,7 @@ class _StaticPageState extends State<StaticPage>
                     children: [
                       const Icon(Icons.wb_sunny_outlined, size: 18),
                       const SizedBox(width: 8),
-                      const Text('Intensidade do branco'),
+                      const Text('Luz branca'),
                       const Spacer(),
                       Text('${(_whiteIntensity / 255 * 100).round()}%'),
                     ],
@@ -124,7 +123,7 @@ class _StaticPageState extends State<StaticPage>
                           _currentColor.green,
                           _currentColor.blue,
                         );
-                        _debouncer.run(() => _sendMessage(color));
+                        _sendMessage(color);
                         setState(() {
                           _whiteIntensity = value;
                           _currentColor = color;
@@ -165,14 +164,14 @@ class _StaticPageState extends State<StaticPage>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                spacing: 4,
+                runSpacing: 4,
                 children: _favoriteColors
                     .map(
                       (c) => ColorIndicator(
                         color: c,
-                        width: 34,
-                        height: 34,
+                        width: 28,
+                        height: 28,
                         borderRadius: 8,
                         hasBorder: false,
                         onSelect: () {
@@ -182,7 +181,7 @@ class _StaticPageState extends State<StaticPage>
                             c.green,
                             c.blue,
                           );
-                          _debouncer.run(() => _sendMessage(selected));
+                          _sendMessage(selected);
                           setState(() => _currentColor = selected);
                         },
                       ),
@@ -323,7 +322,7 @@ class _StaticPageState extends State<StaticPage>
                                   hasBorder: true,
                                   onSelect: () {
                                     Navigator.pop(ctx);
-                                    _debouncer.run(() => _sendMessage(c));
+                                    _sendMessage(c);
                                     setState(() => _currentColor = c);
                                   },
                                 ),

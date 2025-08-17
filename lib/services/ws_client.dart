@@ -16,9 +16,14 @@ class LedWebSocketClient {
   String? _lastSentMessage;
   String? _lastNonOffSentMessage;
   late Uri _uri;
+  Future<Uri> Function()? _uriProvider;
 
   LedWebSocketClient(String uri) {
     _uri = Uri.parse(uri);
+  }
+
+  LedWebSocketClient.withUriProvider(Future<Uri> Function() uriProvider) {
+    _uriProvider = uriProvider;
   }
 
   void sendMessage(String message) {
@@ -54,7 +59,19 @@ class LedWebSocketClient {
     _isConnecting = true;
     _connectedListenable.value = false;
     try {
-      _channel = WebSocketChannel.connect(_uri);
+      Uri uriToConnect;
+      if (_uriProvider != null) {
+        try {
+          uriToConnect = await _uriProvider!();
+        } catch (_) {
+          _isConnecting = false;
+          restartStream();
+          return;
+        }
+      } else {
+        uriToConnect = _uri;
+      }
+      _channel = WebSocketChannel.connect(uriToConnect);
     } catch (_) {
       _isConnecting = false;
       restartStream();
