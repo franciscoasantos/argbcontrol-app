@@ -1,11 +1,11 @@
-import 'package:argbcontrol_app/utils/websocket.dart';
+import 'package:argbcontrol_app/services/ws_client.dart';
 import 'package:flutter/material.dart';
-import 'dart:convert';
+import 'package:argbcontrol_app/models/message_builder.dart';
 
 class RainbowPage extends StatefulWidget {
   const RainbowPage({super.key, required this.wsClient});
 
-  final WebSocket wsClient;
+  final LedWebSocketClient wsClient;
 
   @override
   _RainbowPageState createState() => _RainbowPageState();
@@ -14,6 +14,7 @@ class RainbowPage extends StatefulWidget {
 class _RainbowPageState extends State<RainbowPage> {
   double _currentSliderValue = 7;
   int _previousDelay = 0;
+  bool _appliedInitial = false;
 
   @override
   Widget build(BuildContext context) {
@@ -80,12 +81,44 @@ class _RainbowPageState extends State<RainbowPage> {
 
   void _sendMessage(int delay) {
     if (_previousDelay != delay) {
-      final payload = jsonEncode({
-        "M": "2",
-        "A": delay.toString().padLeft(4, '0')
-      });
-      widget.wsClient.sendMessage(payload);
+      final payload = MessageBuilder.rainbow(delay: delay);
+      widget.wsClient.sendUserMessage(payload);
       _previousDelay = delay;
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    widget.wsClient.statusListenable.addListener(_applyInitialFromStatus);
+    _applyInitialFromStatus();
+  }
+
+  @override
+  void dispose() {
+    widget.wsClient.statusListenable.removeListener(_applyInitialFromStatus);
+    super.dispose();
+  }
+
+  void _applyInitialFromStatus() {
+    if (_appliedInitial) return;
+    final s = widget.wsClient.statusListenable.value;
+    if (s == null || s.mode != 2) return;
+    final int delay = s.rainbowDelay ?? 0;
+    // Inverter delay-> slider aproximado
+    int speed = 7;
+    if (delay >= 640) speed = 1;
+    else if (delay >= 320) speed = 2;
+    else if (delay >= 160) speed = 3;
+    else if (delay >= 80) speed = 4;
+    else if (delay >= 40) speed = 5;
+    else if (delay >= 20) speed = 6;
+    else if (delay >= 10) speed = 7;
+    else speed = 8;
+    setState(() {
+      _currentSliderValue = speed.toDouble();
+      _previousDelay = delay;
+    });
+    _appliedInitial = true;
   }
 }
