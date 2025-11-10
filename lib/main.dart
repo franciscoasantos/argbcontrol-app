@@ -5,7 +5,7 @@ import 'services/ws_client.dart';
 import 'utils/token_manager.dart';
  
 
-const serverHost = "51.222.139.201:5000";
+const serverHost = "srv1.franciscosantos.net:5000";
 const clientId = "6GE7BnevZEqDnnc7hcz2bA";
 const clientSecret = "9a02d1e835264f6fa7f3d0ede49cea5a";
 
