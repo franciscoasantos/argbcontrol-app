@@ -1,66 +1,94 @@
 import 'package:argbcontrol_app/pages/rainbow_page.dart';
 import 'package:argbcontrol_app/pages/static_page.dart';
-import 'package:argbcontrol_app/services/ws_client.dart';
+import 'package:argbcontrol_app/services/websocket_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'fade_page.dart';
 import 'package:argbcontrol_app/utils/connection_guard.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.client});
-
-  static const routeName = '/home';
-  final LedWebSocketClient client;
+  const HomePage({super.key});
 
   @override
-  _HomePage createState() => _HomePage();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePage extends State<HomePage>
+class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  late TabController _controller;
-  bool _didAnimateFromArgs = false;
+  late TabController _tabController;
+  DateTime? _lastResumeTime;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _controller = TabController(length: 3, vsync: this);
-    widget.client.statusListenable.addListener(_onStatusUpdate);
-    _controller.addListener(() {
-      setState(() {});
-    });
-  }
+    _tabController = TabController(length: 3, vsync: this);
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_didAnimateFromArgs) return;
-    // Sem tela de loading: tenta animar com base na última mensagem conhecida
-    final String msg = widget.client.getLastMessage();
-    int index = 0;
-    if (msg.isNotEmpty) {
-      final int? parsed = int.tryParse(msg[0]);
-      if (parsed != null && parsed >= 0 && parsed < _controller.length) {
-        index = parsed;
-      }
-    }
-    _controller.animateTo(index);
-    _didAnimateFromArgs = true;
+    // Listener para atualizar UI quando muda de aba
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
+
+    // Listener para mudanças de status do WebSocket
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final wsService = context.read<WebSocketService>();
+      wsService.addListener(_onWebSocketStatusChanged);
+      _syncTabWithStatus();
+    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    widget.client.statusListenable.removeListener(_onStatusUpdate);
-    _controller.dispose();
+    final wsService = context.read<WebSocketService>();
+    wsService.removeListener(_onWebSocketStatusChanged);
+    _tabController.dispose();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      widget.client.ensureConnected();
+      _handleAppResumed();
+    }
+  }
+
+  void _handleAppResumed() {
+    // Debounce: evita múltiplas reconexões se o evento vier muito rápido
+    final now = DateTime.now();
+    if (_lastResumeTime != null &&
+        now.difference(_lastResumeTime!) < const Duration(seconds: 2)) {
+      return;
+    }
+    _lastResumeTime = now;
+
+    // Aguarda app estabilizar e então reconecta se necessário
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+
+      final wsService = context.read<WebSocketService>();
+      if (!wsService.isConnected) {
+        wsService.reconnect();
+      }
+    });
+  }
+
+  void _onWebSocketStatusChanged() {
+    if (!mounted) return;
+    _syncTabWithStatus();
+  }
+
+  void _syncTabWithStatus() {
+    final wsService = context.read<WebSocketService>();
+    final status = wsService.currentStatus;
+
+    if (status != null &&
+        status.mode >= 0 &&
+        status.mode < _tabController.length) {
+      if (_tabController.index != status.mode) {
+        _tabController.animateTo(status.mode);
+      }
     }
   }
 
@@ -68,59 +96,44 @@ class _HomePage extends State<HomePage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: _ConnectionAppBarTitle(client: widget.client),
-        actions: [
-          _PowerButton(client: widget.client),
-          const SizedBox(width: 8),
-        ],
+        title: const _ConnectionAppBarTitle(),
+        actions: const [_PowerButton(), SizedBox(width: 8)],
       ),
       body: TabBarView(
-        controller: _controller,
-        children: [
-          ConnectionGuard(
-              client: widget.client, child: StaticPage(wsClient: widget.client)),
-          ConnectionGuard(
-              client: widget.client, child: FadePage(wsClient: widget.client)),
-          ConnectionGuard(
-              client: widget.client, child: RainbowPage(wsClient: widget.client)),
+        controller: _tabController,
+        children: const [
+          ConnectionGuard(child: StaticPage()),
+          ConnectionGuard(child: FadePage()),
+          ConnectionGuard(child: RainbowPage()),
         ],
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _controller.index,
-        onDestinationSelected: (index) => _controller.animateTo(index),
+        selectedIndex: _tabController.index,
+        onDestinationSelected: (index) => _tabController.animateTo(index),
         destinations: const [
           NavigationDestination(
-              icon: Icon(Icons.palette_outlined), label: 'Static'),
+            icon: Icon(Icons.palette_outlined),
+            label: 'Static',
+          ),
           NavigationDestination(icon: Icon(Icons.sync), label: 'Fade'),
-          NavigationDestination(
-              icon: Icon(Icons.flash_on), label: 'Rainbow'),
+          NavigationDestination(icon: Icon(Icons.flash_on), label: 'Rainbow'),
         ],
       ),
     );
   }
-
-  void _onStatusUpdate() {
-    final status = widget.client.statusListenable.value;
-    if (status == null) return;
-    final int mode = status.mode;
-    if (mode >= 0 && mode < _controller.length) {
-      _controller.animateTo(mode);
-    }
-  }
 }
 
 class _ConnectionAppBarTitle extends StatelessWidget {
-  const _ConnectionAppBarTitle({required this.client});
-  final LedWebSocketClient client;
+  const _ConnectionAppBarTitle();
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: client.connectionListenable,
-      builder: (context, connected, _) {
+    return Consumer<WebSocketService>(
+      builder: (context, wsService, _) {
+        final connected = wsService.isConnected;
         return Row(
           children: [
-            const Text('LedController'),
+            const Text('LED Controller'),
             const SizedBox(width: 12),
             InputChip(
               label: Text(connected ? 'Conectado' : 'Reconectando...'),
@@ -129,8 +142,12 @@ class _ConnectionAppBarTitle extends StatelessWidget {
                 color: connected ? Colors.greenAccent : Colors.orangeAccent,
                 size: 18,
               ),
-              onPressed: client.ensureConnected,
-            )
+              onPressed: () {
+                if (!connected) {
+                  wsService.reconnect();
+                }
+              },
+            ),
           ],
         );
       },
@@ -139,8 +156,7 @@ class _ConnectionAppBarTitle extends StatelessWidget {
 }
 
 class _PowerButton extends StatefulWidget {
-  const _PowerButton({required this.client});
-  final LedWebSocketClient client;
+  const _PowerButton();
 
   @override
   State<_PowerButton> createState() => _PowerButtonState();
@@ -151,18 +167,23 @@ class _PowerButtonState extends State<_PowerButton> {
 
   @override
   Widget build(BuildContext context) {
+    final wsService = context.read<WebSocketService>();
+
     return IconButton(
       tooltip: _isOn ? 'Desligar' : 'Ligar',
       icon: Icon(_isOn ? Icons.power_settings_new : Icons.power),
       onPressed: () {
         setState(() => _isOn = !_isOn);
+
         if (_isOn) {
-          final restore = widget.client.getLastNonOffSentMessage();
+          // Restaura última mensagem não-off
+          final restore = wsService.lastNonOffSentMessage;
           if (restore != null) {
-            widget.client.sendMessage(restore);
+            wsService.sendMessage(restore);
           }
         } else {
-          widget.client.sendUserMessage(
+          // Desliga (todos os canais em 0)
+          wsService.sendMessage(
             '{"M": "0", "R": "0", "G": "0", "B": "0", "W": "0"}',
             isPowerOff: true,
           );

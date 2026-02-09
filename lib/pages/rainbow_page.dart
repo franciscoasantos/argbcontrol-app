@@ -1,11 +1,10 @@
-import 'package:argbcontrol_app/services/ws_client.dart';
+import 'package:argbcontrol_app/services/websocket_service.dart';
 import 'package:flutter/material.dart';
 import 'package:argbcontrol_app/models/message_builder.dart';
+import 'package:provider/provider.dart';
 
 class RainbowPage extends StatefulWidget {
-  const RainbowPage({super.key, required this.wsClient});
-
-  final LedWebSocketClient wsClient;
+  const RainbowPage({super.key});
 
   @override
   _RainbowPageState createState() => _RainbowPageState();
@@ -81,8 +80,9 @@ class _RainbowPageState extends State<RainbowPage> {
 
   void _sendMessage(int delay) {
     if (_previousDelay != delay) {
+      final wsService = context.read<WebSocketService>();
       final payload = MessageBuilder.rainbow(delay: delay);
-      widget.wsClient.sendUserMessage(payload);
+      wsService.sendMessage(payload);
       _previousDelay = delay;
     }
   }
@@ -90,31 +90,46 @@ class _RainbowPageState extends State<RainbowPage> {
   @override
   void initState() {
     super.initState();
-    widget.wsClient.statusListenable.addListener(_applyInitialFromStatus);
-    _applyInitialFromStatus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final wsService = context.read<WebSocketService>();
+      wsService.addListener(_applyInitialFromStatus);
+      _applyInitialFromStatus();
+    });
   }
 
   @override
   void dispose() {
-    widget.wsClient.statusListenable.removeListener(_applyInitialFromStatus);
+    if (mounted) {
+      final wsService = context.read<WebSocketService>();
+      wsService.removeListener(_applyInitialFromStatus);
+    }
     super.dispose();
   }
 
   void _applyInitialFromStatus() {
-    if (_appliedInitial) return;
-    final s = widget.wsClient.statusListenable.value;
+    if (_appliedInitial || !mounted) return;
+    final wsService = context.read<WebSocketService>();
+    final s = wsService.currentStatus;
     if (s == null || s.mode != 2) return;
     final int delay = s.rainbowDelay ?? 0;
     // Inverter delay-> slider aproximado
     int speed = 7;
-    if (delay >= 640) speed = 1;
-    else if (delay >= 320) speed = 2;
-    else if (delay >= 160) speed = 3;
-    else if (delay >= 80) speed = 4;
-    else if (delay >= 40) speed = 5;
-    else if (delay >= 20) speed = 6;
-    else if (delay >= 10) speed = 7;
-    else speed = 8;
+    if (delay >= 640)
+      speed = 1;
+    else if (delay >= 320)
+      speed = 2;
+    else if (delay >= 160)
+      speed = 3;
+    else if (delay >= 80)
+      speed = 4;
+    else if (delay >= 40)
+      speed = 5;
+    else if (delay >= 20)
+      speed = 6;
+    else if (delay >= 10)
+      speed = 7;
+    else
+      speed = 8;
     setState(() {
       _currentSliderValue = speed.toDouble();
       _previousDelay = delay;

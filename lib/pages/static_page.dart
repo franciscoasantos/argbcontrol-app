@@ -1,14 +1,13 @@
-import 'package:argbcontrol_app/services/ws_client.dart';
+import 'package:argbcontrol_app/services/websocket_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:argbcontrol_app/models/message_builder.dart';
 import 'package:argbcontrol_app/utils/favorites_manager.dart';
+import 'package:provider/provider.dart';
 import 'dart:math' as math;
 
 class StaticPage extends StatefulWidget {
-  const StaticPage({super.key, required this.wsClient});
-
-  final LedWebSocketClient wsClient;
+  const StaticPage({super.key});
 
   @override
   _StaticPageState createState() => _StaticPageState();
@@ -18,10 +17,10 @@ class _StaticPageState extends State<StaticPage>
     with AutomaticKeepAliveClientMixin<StaticPage> {
   Color _currentColor = const Color.fromARGB(0, 0, 0, 0);
   double _whiteIntensity = 0;
-  
+
   Color? _lastSentColor;
   bool _appliedInitial = false;
-  
+
   late List<Color> _favoriteColors;
   final FavoritesManager _favoritesManager = const FavoritesManager();
   static const int _maxFavorites = 24;
@@ -33,18 +32,24 @@ class _StaticPageState extends State<StaticPage>
   @override
   void initState() {
     super.initState();
-    // Aplica status inicial quando recebido (M == 0)
-    widget.wsClient.statusListenable.addListener(_applyInitialFromStatus);
-    // Tenta aplicar imediatamente caso já exista último status
-    _applyInitialFromStatus();
-    // Inicializa imediatamente com paleta vibrante padrão e carrega persistidos em seguida
+    // Inicializa favoritos
     _favoriteColors = _favoritesManager.defaultCurated();
     _loadFavorites();
+
+    // Aplica status inicial após primeiro frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final wsService = context.read<WebSocketService>();
+      wsService.addListener(_applyInitialFromStatus);
+      _applyInitialFromStatus();
+    });
   }
 
   @override
   void dispose() {
-    widget.wsClient.statusListenable.removeListener(_applyInitialFromStatus);
+    if (mounted) {
+      final wsService = context.read<WebSocketService>();
+      wsService.removeListener(_applyInitialFromStatus);
+    }
     super.dispose();
   }
 
@@ -52,7 +57,10 @@ class _StaticPageState extends State<StaticPage>
   Widget build(BuildContext context) {
     super.build(context);
     final size = MediaQuery.of(context).size;
-    final double wheelDiameter = math.max(180.0, math.min(320.0, size.width - 48));
+    final double wheelDiameter = math.max(
+      180.0,
+      math.min(320.0, size.width - 48),
+    );
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.only(bottom: 24),
@@ -85,10 +93,10 @@ class _StaticPageState extends State<StaticPage>
                 borderRadius: 8,
                 wheelDiameter: wheelDiameter,
                 colorCodeHasColor: true,
-                showColorName: true
+                showColorName: true,
               ),
             ),
-                        const SizedBox(height: 16),
+            const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
@@ -106,10 +114,12 @@ class _StaticPageState extends State<StaticPage>
                   SliderTheme(
                     data: SliderTheme.of(context).copyWith(
                       trackHeight: 6,
-                      thumbShape:
-                          const RoundSliderThumbShape(enabledThumbRadius: 10),
-                      overlayShape:
-                          const RoundSliderOverlayShape(overlayRadius: 18),
+                      thumbShape: const RoundSliderThumbShape(
+                        enabledThumbRadius: 10,
+                      ),
+                      overlayShape: const RoundSliderOverlayShape(
+                        overlayRadius: 18,
+                      ),
                     ),
                     child: Slider(
                       value: _whiteIntensity,
@@ -197,19 +207,23 @@ class _StaticPageState extends State<StaticPage>
 
   void _sendMessage(Color color) {
     if (color != _lastSentColor) {
-      widget.wsClient.sendUserMessage(MessageBuilder.staticMode(
-        r: color.red,
-        g: color.green,
-        b: color.blue,
-        w: color.alpha,
-      ));
+      final wsService = context.read<WebSocketService>();
+      wsService.sendMessage(
+        MessageBuilder.staticMode(
+          r: color.red,
+          g: color.green,
+          b: color.blue,
+          w: color.alpha,
+        ),
+      );
       _lastSentColor = color;
     }
   }
 
   void _applyInitialFromStatus() {
-    if (_appliedInitial) return;
-    final s = widget.wsClient.statusListenable.value;
+    if (_appliedInitial || !mounted) return;
+    final wsService = context.read<WebSocketService>();
+    final s = wsService.currentStatus;
     if (s == null || s.mode != 0) return;
     final int r = s.r ?? 0;
     final int g = s.g ?? 0;
@@ -250,8 +264,11 @@ class _StaticPageState extends State<StaticPage>
   }
 
   Future<void> _removeFavorite(Color color) async {
-    setState(() => _favoriteColors =
-        _favoriteColors.where((c) => c.value != color.value).toList());
+    setState(
+      () => _favoriteColors = _favoriteColors
+          .where((c) => c.value != color.value)
+          .toList(),
+    );
     await _favoritesManager.saveFavorites(_favoriteColors);
   }
 
@@ -271,7 +288,10 @@ class _StaticPageState extends State<StaticPage>
                   children: [
                     Row(
                       children: [
-                        Text('Gerenciar favoritos', style: Theme.of(context).textTheme.titleMedium),
+                        Text(
+                          'Gerenciar favoritos',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                         const Spacer(),
                         TextButton.icon(
                           onPressed: () async {
@@ -298,11 +318,13 @@ class _StaticPageState extends State<StaticPage>
                             final defaults = _favoritesManager.defaultCurated();
                             setState(() => _favoriteColors = defaults);
                             setModalState(() {});
-                            await _favoritesManager.saveFavorites(_favoriteColors);
+                            await _favoritesManager.saveFavorites(
+                              _favoriteColors,
+                            );
                           },
                           icon: const Icon(Icons.restore),
                           label: const Text('Reset favoritos'),
-                        )
+                        ),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -337,7 +359,7 @@ class _StaticPageState extends State<StaticPage>
                                       if (mounted) setState(() {});
                                     },
                                   ),
-                                )
+                                ),
                               ],
                             ),
                           )
@@ -361,8 +383,8 @@ class _StaticPageState extends State<StaticPage>
     return dist2 <= _colorTolerance * _colorTolerance;
   }
 
-  Color _normalizeFavorite(Color c) => Color.fromARGB(255, c.red, c.green, c.blue);
-
+  Color _normalizeFavorite(Color c) =>
+      Color.fromARGB(255, c.red, c.green, c.blue);
 
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
